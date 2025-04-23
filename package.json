@@ -1,0 +1,37 @@
+{
+  "name": "codemodel-cli",
+  "version": "0.1.0",
+  "description": "A CLI wrapper for managing AI code model profiles and execution",
+  "main": "bin/codemodel.js",
+  "bin": {
+    "cw": "bin/codemodel.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build-dmg": "scripts/create-dmg.sh",
+    "postinstall": "node -e \"console.log('\\nTo set up default profiles, run: ./scripts/setup-profiles.sh\\n')\""
+  },
+  "keywords": [
+    "ai",
+    "code",
+    "cli",
+    "wrapper"
+  ],
+  "author": "Cristiano Aredes <https://github.com/cristianoaredes>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cristianoaredes/codemodel-cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/cristianoaredes/codemodel-cli/issues"
+  },
+  "homepage": "https://github.com/cristianoaredes/codemodel-cli#readme",
+  "dependencies": {
+    "commander": "^11.1.0",
+    "inquirer": "^8.2.5",
+    "js-yaml": "^4.1.0",
+    "chalk": "^4.1.2",
+    "conf": "^10.2.0"
+  }
+}
