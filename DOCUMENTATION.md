@@ -41,7 +41,7 @@ codemodel-cli/
 │   └── codemodel.js     # Main CLI entry point
 ├── src/
 │   ├── config.js        # Configuration management
-│   └── utils.js         # Utility functions
+│   └── utils.js         # Utility functions and backend support
 ├── scripts/
 │   ├── create-dmg.sh    # DMG creation script
 │   └── setup-profiles.sh # Configures default profiles
@@ -55,12 +55,79 @@ codemodel-cli/
 - **js-yaml**: YAML parsing for configuration files
 - **chalk**: Terminal text styling
 
+### Backend Integration
+
+CodeModel CLI doesn't directly interact with AI providers. Instead, it uses various backend CLI tools that are specialized for different providers:
+
+1. **OpenAI CLI** (`openai`): The official OpenAI command-line tool
+2. **GPT CLI** (`gpt`): A command-line interface for GPT models
+3. **Anthropic CLI** (`anthropic`): Command-line interface for Claude models
+
+The tool can automatically detect and install these backend CLIs as needed, based on the provider being used. This architecture allows for:
+
+- **Flexibility**: Easy support for new providers and models
+- **Specializion**: Each backend can optimize for its specific provider
+- **Compatibility**: Works with existing credentials and configurations
+
 ### Workflow
 
 1. User executes a `cw` command
 2. CLI loads configuration from `~/.codemodel-cli/config.yaml`
 3. Command is processed (list profiles, add profile, run with profile, etc.)
-4. For `run` commands, the appropriate model/provider parameters are passed to the codex CLI
+4. For `run` commands:
+   - The appropriate backend CLI is selected and installed if needed
+   - Provider/model parameters are translated to backend-specific arguments
+   - The command is executed using the chosen backend
+
+## Backend CLI Tools
+
+### Supported Backends
+
+CodeModel CLI supports multiple backend CLI tools, each specializing in different AI providers:
+
+| Backend | Description | Package | Default For |
+|---------|-------------|---------|------------|
+| openai | OpenAI's official CLI | @openai/api | OpenAI, DeepSeek, Mistral, Qwen, OpenRouter |
+| gpt | General-purpose GPT CLI | gpt3-cli | Google Gemini |
+| anthropic | Anthropic's CLI for Claude | @anthropic-ai/cli | Anthropic |
+
+### Backend Selection
+
+The backend is selected through the following process:
+
+1. If specified in the command with `--backend`, use that backend
+2. If a backend is configured for the active profile, use that
+3. Use the default backend for the provider
+4. Try to find any available supported backend
+5. If no backend is found, guide the user to install one
+
+### Backend Configuration
+
+You can configure backends using the following commands:
+
+```bash
+# List available backends
+cw backend list
+
+# Set the active backend
+cw backend set openai
+
+# View current backend info
+cw backend info
+
+# Install a specific backend
+cw backend install anthropic
+```
+
+### API Keys and Authentication
+
+Each backend CLI has its own authentication system, typically using environment variables:
+
+- **OpenAI**: Requires `OPENAI_API_KEY`
+- **Anthropic**: Requires `ANTHROPIC_API_KEY`
+- **GPT CLI**: Uses various options depending on configuration
+
+CodeModel CLI does not manage these API keys directly - it relies on the backend CLI's authentication.
 
 ## Installation
 
@@ -155,7 +222,7 @@ profiles:
 - `--version, -V`: Display the version number
 - `--help, -h`: Display help information
 
-### Commands
+### Profile Management Commands
 
 #### `cw list`
 
@@ -441,13 +508,20 @@ If necessary, manually edit the file or remove it to start fresh:
 rm ~/.codemodel-cli/config.yaml
 ```
 
-#### Codex Installation Problems
+#### Backend CLI Problems
 
-**Problem**: Errors about codex not being found or installed.
+**Problem**: Errors about no supported backend CLI tools found.
 
-**Solution**: Manually install codex:
+**Solution**: Manually install a supported backend:
 ```bash
-npm install -g @openai/codex
+npm install -g openai  # OpenAI CLI
+npm install -g gpt3-cli  # GPT CLI
+npm install -g @anthropic-ai/cli  # Anthropic CLI
+```
+
+Then set it as the active backend:
+```bash
+cw backend set openai
 ```
 
 ### Getting Help

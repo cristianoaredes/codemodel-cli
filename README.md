@@ -67,11 +67,26 @@ That's it! You're now using CodeModel CLI! 🎉
 
 ## 📥 Installation
 
+### Prerequisites
+
+CodeModel CLI requires one of the following backend AI CLI tools to be installed:
+
+| Backend | Description | Installation |
+|---------|-------------|--------------|
+| OpenAI CLI | Official OpenAI command-line interface | `npm install -g openai` |
+| GPT CLI | Command-line interface for GPT models | `npm install -g gpt3-cli` |
+| Anthropic CLI | Command-line interface for Claude models | `npm install -g @anthropic-ai/cli` |
+
+You don't need to install these beforehand - CodeModel CLI can automatically install the appropriate backend based on your chosen provider.
+
 ### Using NPM (Recommended)
 
 ```bash
 # Install globally
 npm install -g codemodel-cli
+
+# Set up a backend (optional, will be done automatically if needed)
+cw backend install openai
 ```
 
 ### Using the DMG Installer (macOS)
@@ -93,7 +108,8 @@ npm install
 # Link for development
 npm link
 
-# Set up default profiles (optional)
+# Install a backend and set up default profiles (optional)
+cw backend install openai
 ./scripts/setup-profiles.sh
 ```
 
@@ -119,6 +135,25 @@ cw select
 
 # Remove a profile
 cw remove old-profile
+```
+
+### Backend Management
+
+```bash
+# List available backend CLI tools
+cw backend list
+
+# Install a specific backend
+cw backend install openai
+
+# Set the active backend
+cw backend set anthropic
+
+# Show information about the current backend
+cw backend info
+
+# Run with a specific backend just once
+cw run --backend openai "Write a function to sort an array"
 ```
 
 ### AI Code Generation Workflows
@@ -156,7 +191,15 @@ ask_ai "Create a unit test for this function" test.js
 Configuration is stored in `~/.codemodel-cli/config.yaml` with a simple structure:
 
 ```yaml
-active: openai-profile  # Currently active profile
+# Currently active profile
+active: openai-profile  
+
+# Backend configuration
+backend:
+  active: openai  # Currently active backend CLI
+  custom: {}      # Custom backend configurations
+
+# Profile definitions
 profiles:
   openai-profile:
     provider: openai
@@ -166,6 +209,22 @@ profiles:
     model: claude-3.7-sonnet
   # Additional profiles...
 ```
+
+### Default Backend Selection
+
+CodeModel CLI automatically selects an appropriate backend for each provider:
+
+| Provider | Default Backend |
+|----------|----------------|
+| OpenAI | openai |
+| Anthropic | anthropic |
+| Google Gemini | gpt |
+| DeepSeek | openai |
+| Mistral | openai |
+| Qwen | openai |
+| OpenRouter | openai |
+
+Most providers use OpenAI-compatible APIs, so the OpenAI CLI works as a backend for many providers.
 
 ## 🤖 Supported AI Models
 
@@ -268,14 +327,23 @@ Join our community to get help, share ideas, and contribute:
 **Q: The `cw` command is not found after installation**  
 A: Ensure your global npm bin directory is in your PATH. You can check with `npm bin -g`.
 
-**Q: I get an error about codex not being installed**  
-A: The tool should automatically install codex, but if it fails, you can install it manually with `npm install -g @openai/codex`.
+**Q: I get an error about no supported backend CLI tools found**  
+A: You need to install at least one backend CLI tool. Run `cw backend install openai` to install the OpenAI CLI.
+
+**Q: The backend command fails to execute**  
+A: Make sure you have the appropriate API keys set for your backend. Each backend CLI tool requires its own environment variables (e.g., `OPENAI_API_KEY` for OpenAI CLI).
+
+**Q: I'm getting authentication errors with the backend**  
+A: Check that you've set up the correct environment variables for your chosen provider's API key.
 
 **Q: How do I update to the latest version?**  
 A: Run `npm update -g codemodel-cli`.
 
 **Q: Can I use multiple profiles in a single script?**  
 A: Yes! You can specify different profiles with each command using `--profile name`.
+
+**Q: Can I use a different backend for each provider?**  
+A: Yes! Set the default backend with `cw backend set <name>` or specify a different backend for a single command with `cw run --backend <name>`.
 
 ## 📄 License
 

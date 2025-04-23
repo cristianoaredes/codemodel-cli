@@ -18,6 +18,17 @@ const DEFAULT_MODELS = {
   openrouter: 'agentica-org/deepcoder-14b-preview'
 };
 
+// Default backend configurations by provider
+const DEFAULT_BACKENDS = {
+  openai: 'openai',
+  gemini: 'gpt',
+  anthropic: 'anthropic',
+  deepseek: 'openai',  // Many use OpenAI-compatible APIs
+  mistral: 'openai',   // Many use OpenAI-compatible APIs
+  qwen: 'openai',      // Many use OpenAI-compatible APIs
+  openrouter: 'openai' // OpenRouter uses OpenAI-compatible API
+};
+
 /**
  * Load configuration from file, or initialize with defaults if not found
  * @returns {Object} Configuration object
@@ -26,16 +37,37 @@ function loadConfig() {
   if (!fs.existsSync(CONFIG_PATH)) {
     return { 
       profiles: {},
-      active: null
+      active: null,
+      backend: {
+        active: 'openai',
+        custom: {}
+      }
     };
   }
   
   try {
-    return yaml.load(fs.readFileSync(CONFIG_PATH, 'utf8'));
+    const config = yaml.load(fs.readFileSync(CONFIG_PATH, 'utf8'));
+    
+    // Ensure backend config exists (for backward compatibility)
+    if (!config.backend) {
+      config.backend = {
+        active: 'openai',
+        custom: {}
+      };
+    }
+    
+    return config;
   } catch (err) {
     console.error(`Error loading config: ${err.message}`);
     // Return a default config if there's an error
-    return { profiles: {}, active: null };
+    return { 
+      profiles: {}, 
+      active: null,
+      backend: {
+        active: 'openai',
+        custom: {}
+      }
+    };
   }
 }
 
@@ -64,9 +96,63 @@ function getDefaultModel(provider) {
   return DEFAULT_MODELS[provider.toLowerCase()] || '';
 }
 
+/**
+ * Get the default backend for a provider
+ * @param {string} provider Provider name
+ * @returns {string} Default backend name
+ */
+function getDefaultBackend(provider) {
+  return DEFAULT_BACKENDS[provider.toLowerCase()] || 'openai';
+}
+
+/**
+ * Get the current backend configuration
+ * @returns {Object} Backend configuration object
+ */
+function getBackendConfig() {
+  const config = loadConfig();
+  return config.backend || { active: 'openai', custom: {} };
+}
+
+/**
+ * Set the active backend
+ * @param {string} backend Backend name
+ */
+function setActiveBackend(backend) {
+  const config = loadConfig();
+  if (!config.backend) {
+    config.backend = { active: backend, custom: {} };
+  } else {
+    config.backend.active = backend;
+  }
+  saveConfig(config);
+}
+
+/**
+ * Set a custom backend configuration
+ * @param {string} name Custom backend name
+ * @param {Object} settings Backend settings
+ */
+function setCustomBackend(name, settings) {
+  const config = loadConfig();
+  if (!config.backend) {
+    config.backend = { active: 'openai', custom: {} };
+  }
+  if (!config.backend.custom) {
+    config.backend.custom = {};
+  }
+  config.backend.custom[name] = settings;
+  saveConfig(config);
+}
+
 module.exports = {
   loadConfig,
   saveConfig,
   getDefaultModel,
-  DEFAULT_MODELS
+  getDefaultBackend,
+  getBackendConfig,
+  setActiveBackend,
+  setCustomBackend,
+  DEFAULT_MODELS,
+  DEFAULT_BACKENDS
 };

@@ -3,8 +3,8 @@
 const { Command } = require('commander');
 const chalk = require('chalk');
 const inquirer = require('inquirer');
-const { loadConfig, saveConfig } = require('../src/config');
-const { ensureCodexInstalled } = require('../src/utils');
+const { loadConfig, saveConfig, setActiveBackend, getBackendConfig } = require('../src/config');
+const { ensureBackendInstalled, generateCommandArgs, SUPPORTED_BACKENDS } = require('../src/utils');
 const { spawnSync } = require('child_process');
 
 const program = new Command();
@@ -162,12 +162,103 @@ program
     console.log(chalk.green(`Active profile: '${selected}'.`));
   });
 
+// Backend management commands
+program
+  .command('backend')
+  .description('Manage backend CLI tools')
+  .argument('<cmd>', 'Backend command: list, set, info, install')
+  .argument('[value]', 'Backend name for set and install commands')
+  .action((cmd, value) => {
+    if (cmd === 'list') {
+      console.log(chalk.bold('Available backends:'));
+      
+      Object.entries(SUPPORTED_BACKENDS).forEach(([name, info]) => {
+        const backendInfo = checkBackend(name);
+        const status = backendInfo && backendInfo.installed ? chalk.green('✓ Installed') : chalk.yellow('✗ Not installed');
+        console.log(`${chalk.cyan(name)}: ${info.description} ${status}`);
+        console.log(`  Command: ${info.command}`);
+        console.log(`  Install: ${info.installCmd}`);
+      });
+      
+      const config = loadConfig();
+      if (config.backend && config.backend.active) {
+        console.log(chalk.bold(`\nActive backend: ${chalk.green(config.backend.active)}`));
+      }
+      
+      return;
+    }
+    
+    if (cmd === 'set') {
+      if (!value) {
+        console.error(chalk.red('Error: Backend name is required for "set" command'));
+        process.exit(1);
+      }
+      
+      // Check if it's a supported backend
+      if (!SUPPORTED_BACKENDS[value] && value !== 'custom') {
+        console.error(chalk.red(`Unknown backend: ${value}`));
+        console.log(chalk.yellow('Available backends:'), Object.keys(SUPPORTED_BACKENDS).join(', '));
+        process.exit(1);
+      }
+      
+      // Set the active backend
+      setActiveBackend(value);
+      console.log(chalk.green(`Active backend set to: ${value}`));
+      return;
+    }
+    
+    if (cmd === 'info') {
+      const backend = ensureBackendInstalled();
+      console.log(chalk.bold('Current backend information:'));
+      console.log(`Command: ${chalk.cyan(backend.command)}`);
+      console.log(`Description: ${backend.info.description}`);
+      console.log(`Default args: ${backend.info.defaultArgs.join(' ')}`);
+      return;
+    }
+    
+    if (cmd === 'install') {
+      if (!value) {
+        console.error(chalk.red('Error: Backend name is required for "install" command'));
+        process.exit(1);
+      }
+      
+      if (!SUPPORTED_BACKENDS[value]) {
+        console.error(chalk.red(`Unknown backend: ${value}`));
+        console.log(chalk.yellow('Available backends:'), Object.keys(SUPPORTED_BACKENDS).join(', '));
+        process.exit(1);
+      }
+      
+      const backend = SUPPORTED_BACKENDS[value];
+      console.log(chalk.yellow(`Installing ${value} backend (${backend.package})...`));
+      
+      const install = spawnSync('npm', ['install', '-g', backend.package], { 
+        stdio: 'inherit',
+        shell: true
+      });
+      
+      if (install.status === 0) {
+        console.log(chalk.green(`${value} backend installed successfully.`));
+        setActiveBackend(value);
+        console.log(chalk.green(`Active backend set to: ${value}`));
+      } else {
+        console.error(chalk.red(`Failed to install ${value} backend.`));
+        process.exit(1);
+      }
+      
+      return;
+    }
+    
+    console.error(chalk.red(`Unknown backend command: ${cmd}`));
+    console.log(chalk.yellow('Available commands: list, set, info, install'));
+  });
+
 // Run with profile
 program
   .command('run')
-  .description('Run codex with the active profile')
+  .description('Run commands with the active profile')
   .allowUnknownOption(true)
   .option('-p, --profile <name>', 'Profile to use')
+  .option('-b, --backend <name>', 'Backend to use for this command')
   .action((options) => {
     const config = loadConfig();
     const name = options.profile || config.active;
@@ -180,30 +271,72 @@ program
     const prof = config.profiles[name];
     console.log(chalk.blue(`Using profile: ${name} (${prof.provider}/${prof.model})`));
     
+    // Ensure the backend CLI is installed
+    const backend = ensureBackendInstalled(options.backend);
+    console.log(chalk.blue(`Using backend: ${backend.command}`));
+    
+    // Get extra arguments and filter out our own options
     const extra = process.argv.slice(process.argv.indexOf('run') + 1)
-      .filter(arg => arg !== '-p' && arg !== '--profile' && arg !== options.profile);
+      .filter(arg => arg !== '-p' && arg !== '--profile' && arg !== options.profile &&
+                     arg !== '-b' && arg !== '--backend' && arg !== options.backend);
     
-    const args = ['--provider', prof.provider, '--model', prof.model].concat(extra);
-    
-    // Ensure the codex CLI is installed
-    ensureCodexInstalled();
+    // Generate backend-specific command arguments
+    const args = generateCommandArgs(prof.provider, prof.model, extra, backend);
     
     // Run the command
-    const res = spawnSync('codex', args, { stdio: 'inherit' });
+    const res = spawnSync(backend.command, args, { stdio: 'inherit' });
     process.exit(res.status || 0);
   });
 
-// Default command - if just 'cw' is run without subcommand, execute 'run'
+// Default command - if just 'cw' is run with arguments but no subcommand, treat as a prompt
 program
-  .action(() => {
-    const config = loadConfig();
-    if (!config.active) {
-      console.log(chalk.yellow('No active profile selected. Use `cw use <name>` or `cw select` to select a profile.'));
-      process.exit(1);
+  .arguments('[prompt...]')
+  .action((promptArgs) => {
+    if (promptArgs && promptArgs.length > 0) {
+      // If we have arguments, treat them as a prompt
+      const prompt = promptArgs.join(' ');
+      
+      const config = loadConfig();
+      if (!config.active) {
+        console.log(chalk.yellow('No active profile selected. Use `cw use <name>` or `cw select` to select a profile.'));
+        process.exit(1);
+      }
+      
+      // Call the run command with the prompt
+      const runCmd = program.commands.find(cmd => cmd.name() === 'run');
+      process.argv = [process.argv[0], process.argv[1], 'run', prompt];
+      runCmd.action({ profile: config.active });
+    } else {
+      // If no arguments, check if we have an active profile and show help
+      const config = loadConfig();
+      if (!config.active) {
+        console.log(chalk.yellow('No active profile selected. Use `cw use <name>` or `cw select` to select a profile.'));
+      } else {
+        console.log(chalk.blue(`Active profile: ${config.active}`));
+        console.log(chalk.yellow('Use `cw "your prompt"` to send a prompt with the active profile.'));
+      }
+      
+      program.help();
     }
-    
-    // Call the run command with no additional arguments
-    program.commands.find(cmd => cmd.name() === 'run').action({ profile: config.active });
   });
 
 program.parse(process.argv);
+
+// Helper function to check if a backend is installed
+function checkBackend(backendName) {
+  try {
+    const info = SUPPORTED_BACKENDS[backendName];
+    if (!info) return null;
+    
+    const checkCmd = process.platform === 'win32' ? 'where' : 'which';
+    const result = spawnSync(checkCmd, [info.command], { stdio: 'ignore' });
+    
+    return {
+      command: info.command,
+      installed: result.status === 0,
+      info
+    };
+  } catch (err) {
+    return { installed: false };
+  }
+}
