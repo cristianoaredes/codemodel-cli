@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="800" height="200" viewBox="0 0 800 200" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .terminal-bg { fill: #2E3440; }
+    .terminal-header { fill: #4C566A; }
+    .terminal-button { fill: #D8DEE9; }
+    .terminal-close { fill: #BF616A; }
+    .terminal-minimize { fill: #EBCB8B; }
+    .terminal-maximize { fill: #A3BE8C; }
+    .code-text { fill: #88C0D0; font-family: 'Courier New', monospace; font-size: 24px; }
+    .brain-path { fill: none; stroke: #B48EAD; stroke-width: 4; }
+    .title-text { fill: #ECEFF4; font-family: Arial, sans-serif; font-weight: bold; font-size: 42px; }
+    .subtitle-text { fill: #D8DEE9; font-family: Arial, sans-serif; font-size: 20px; }
+    .circuit { fill: none; stroke: #5E81AC; stroke-width: 1.5; }
+  </style>
+
+  <!-- Terminal Window -->
+  <rect class="terminal-bg" x="100" y="40" width="600" height="130" rx="10" />
+  <rect class="terminal-header" x="100" y="40" width="600" height="25" rx="10" ry="10" />
+  
+  <!-- Terminal Buttons -->
+  <circle class="terminal-close" cx="120" cy="52.5" r="7" />
+  <circle class="terminal-minimize" cx="145" cy="52.5" r="7" />
+  <circle class="terminal-maximize" cx="170" cy="52.5" r="7" />
+  
+  <!-- Code Text -->
+  <text class="code-text" x="120" y="95">$ cw select model</text>
+  <text class="code-text" x="120" y="125">→ claude-3.7 ✓</text>
+  <text class="code-text" x="120" y="155">$ _</text>
+  
+  <!-- Circuit Board Pattern -->
+  <path class="circuit" d="M220,40 V30 H300 V20 H380 V30 H500 V40" />
+  <path class="circuit" d="M250,170 V180 H350 V190 H450 V180 H550 V170" />
+  <path class="circuit" d="M100,100 H80 V130 H100" />
+  <path class="circuit" d="M700,80 H720 V110 H700" />
+  
+  <!-- Brain/AI Symbol -->
+  <path class="brain-path" d="M650,90 Q670,70 690,90 Q710,110 690,130 Q670,150 650,130 Q630,110 650,90" />
+  <path class="brain-path" d="M650,90 Q650,105 670,110" />
+  <path class="brain-path" d="M650,130 Q650,115 670,110" />
+  
+  <!-- Title -->
+  <text class="title-text" x="400" y="30" text-anchor="middle">CodeModel CLI</text>
+  
+  <!-- Subtitle -->
+  <text class="subtitle-text" x="400" y="190" text-anchor="middle">Unified Interface for AI Code Models</text>
+</svg>

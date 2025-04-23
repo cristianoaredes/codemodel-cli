@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="800" height="500" viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .box { fill: #ECEFF4; stroke: #4C566A; stroke-width: 2; }
+    .highlight-box { fill: #88C0D0; stroke: #5E81AC; stroke-width: 2; }
+    .arrow { fill: none; stroke: #4C566A; stroke-width: 2; marker-end: url(#arrowhead); }
+    .text { fill: #2E3440; font-family: Arial, sans-serif; font-size: 16px; text-anchor: middle; }
+    .highlight-text { fill: #2E3440; font-family: Arial, sans-serif; font-weight: bold; font-size: 18px; text-anchor: middle; }
+    .title-text { fill: #2E3440; font-family: Arial, sans-serif; font-weight: bold; font-size: 24px; text-anchor: middle; }
+    .provider-box { fill: #D8DEE9; stroke: #4C566A; stroke-width: 2; }
+    .provider-name { fill: #2E3440; font-family: Arial, sans-serif; font-size: 14px; text-anchor: middle; }
+  </style>
+  
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4C566A" />
+    </marker>
+  </defs>
+  
+  <!-- Title -->
+  <text class="title-text" x="400" y="40">CodeModel CLI Architecture</text>
+  
+  <!-- User Input Box -->
+  <rect class="box" x="50" y="100" width="150" height="80" rx="5" />
+  <text class="text" x="125" y="145">User Command</text>
+  
+  <!-- CodeModel CLI Box -->
+  <rect class="highlight-box" x="300" y="80" width="200" height="120" rx="5" />
+  <text class="highlight-text" x="400" y="130">CodeModel CLI</text>
+  <text class="text" x="400" y="160">Profile Management</text>
+  <text class="text" x="400" y="180">Model Selection</text>
+  
+  <!-- Config Box -->
+  <rect class="box" x="300" y="250" width="200" height="80" rx="5" />
+  <text class="text" x="400" y="290">~/.codemodel-cli/config.yaml</text>
+  
+  <!-- Provider Boxes -->
+  <rect class="provider-box" x="600" y="100" width="100" height="60" rx="5" />
+  <text class="provider-name" x="650" y="135">OpenAI</text>
+  
+  <rect class="provider-box" x="600" y="180" width="100" height="60" rx="5" />
+  <text class="provider-name" x="650" y="215">Anthropic</text>
+  
+  <rect class="provider-box" x="600" y="260" width="100" height="60" rx="5" />
+  <text class="provider-name" x="650" y="295">DeepSeek</text>
+  
+  <rect class="provider-box" x="600" y="340" width="100" height="60" rx="5" />
+  <text class="provider-name" x="650" y="375">Google</text>
+  
+  <rect class="provider-box" x="600" y="420" width="100" height="60" rx="5" />
+  <text class="provider-name" x="650" y="455">OpenRouter</text>
+  
+  <!-- Arrows -->
+  <path class="arrow" d="M200,140 H280" />
+  <path class="arrow" d="M400,200 V240" />
+  <path class="arrow" d="M400,250 V200" />
+  <path class="arrow" d="M500,120 H580" />
+  <path class="arrow" d="M500,140 L560,200 H580" />
+  <path class="arrow" d="M500,160 L560,280 H580" />
+  <path class="arrow" d="M500,180 L560,360 H580" />
+  <path class="arrow" d="M500,200 L560,440 H580" />
+</svg>
